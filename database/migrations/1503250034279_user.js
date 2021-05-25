@@ -13,8 +13,6 @@ class UserSchema extends Schema {
       table.string('avatar', 255)
       table.string('bio', 255)
       table.date('birthdate').notNullable()
-      table.boolean('is_owner').notNullable()
-
       table.json('presences')
       table.timestamps()
     })

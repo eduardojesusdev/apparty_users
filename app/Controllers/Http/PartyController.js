@@ -4,16 +4,16 @@ const Party = use('App/Models/Party')
 class PartyController {
 
   async show({response}){
-    const badaladas = await Party.where('presences', presences).fetch()
-    const acontecendo_agora = await Party.where('date_init', '<=', Date.now()).fetch()
-    const proximas_horas = await Party.where('date_init', '>=', Date.now() + 8).fetch()
-    const tematicas = await Party.where('is_tematic', '!=', null).fetch()
+    const badaladas = await Party.all()
+    // const acontecendo_agora = await Party.where('date_init', '<=', Date.now()).fetch()
+    // const proximas_horas = await Party.where('date_init', '>=', Date.now() + 8).fetch()
+    // const tematicas = await Party.where('is_tematic', '!=', null).fetch()
 
     response.status(200).send({
       badaladas,
-      acontecendo_agora,
-      proximas_horas,
-      tematicas
+      // acontecendo_agora,
+      // proximas_horas,
+      // tematicas
     })
   }
 

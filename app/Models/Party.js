@@ -4,6 +4,10 @@
 const Model = use('Model')
 
 class Party extends Model {
+
+  static get connection() {
+    return 'mysql_owners'
+  }
 }
 
 module.exports = Party
