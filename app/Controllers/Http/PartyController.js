@@ -1,32 +1,159 @@
 'use strict'
+
 const Party = use('App/Models/Party')
+const Database = use('Database')
+const { validate } = use('Validator')
+const Env = use('Env')
 
 class PartyController {
 
-  async show({response}){
-    const badaladas = await Party.all()
-    // const acontecendo_agora = await Party.where('date_init', '<=', Date.now()).fetch()
-    // const proximas_horas = await Party.where('date_init', '>=', Date.now() + 8).fetch()
-    // const tematicas = await Party.where('is_tematic', '!=', null).fetch()
+  async show({request, response}){
 
-    response.status(200).send({
-      badaladas,
-      // acontecendo_agora,
-      // proximas_horas,
-      // tematicas
-    })
+    let page = request.get().page
+    if (!page || page == 0) page = 1
+
+    try {
+      const parties = await Party
+      .query()
+      .paginate(page, Env.get('PER_PAGE'))
+
+      response
+      .status(200)
+      .send({
+        parties
+      })
+    } catch (error) {
+      response
+      .status(400)
+      .send({
+        message: error.message
+      })
+    }
+  }
+
+  async now({request, response}){
+
+    let page = request.get().page
+    if (!page || page == 0) page = 1
+
+    try {
+      const parties = await Party
+      .query('date_init', '>=', Date.now())
+      .paginate(page, Env.get('PER_PAGE'))
+
+      response
+      .status(200)
+      .send({
+        parties
+      })
+    } catch (error) {
+      response
+      .status(400)
+      .send({
+        message: error.message
+      })
+    }
+  }
+
+  async nextHour({request, response}){
+
+    let page = request.get().page
+    if (!page || page == 0) page = 1
+
+    try {
+      const parties = await Party
+      .query('date_init', '>=', Date.now() + 2)
+      .paginate(page, Env.get('PER_PAGE'))
+
+      response
+      .status(200)
+      .send({
+        parties
+      })
+    } catch (error) {
+      response
+      .status(400)
+      .send({
+        message: error.message
+      })
+    }
+  }
+
+  async tematics({request, response}){
+
+    let page = request.get().page
+    if (!page || page == 0) page = 1
+
+    try {
+      const parties = await Party
+      .query('theme', '!=', null)
+      .paginate(page, Env.get('PER_PAGE'))
+
+      response
+      .status(200)
+      .send({
+        parties
+      })
+    } catch (error) {
+      response
+      .status(400)
+      .send({
+        message: error.message
+      })
+    }
   }
 
   async single({request, response}){
-    const slug = request.body.slug
-    const single = await Party.where('slug', slug).first()
+    try {
+      const slug = request.params.party_slug
+      const single = await Party.find('party_slug', slug)
 
-    response.status(200).send(single)
+      response
+      .status(200)
+      .send({
+        single
+      })
+    } catch (error) {
+      response
+      .status(400)
+      .send({
+        message: error.message
+      })
+    }
+  }
+
+  async search({request, response}){
+    try {
+
+      let query = request.input('query')
+
+      console.log(query)
+
+      let parties = await Party
+      .query()
+      .where('name', 'like', '%' + query + '%')
+      .orWhere('description', 'like', '%' + query + '%')
+      .orWhere('type_event', 'like', '%' + query + '%')
+      .orWhere('theme', 'like', '%' + query + '%')
+      .fetch()
+
+      response
+      .status(200)
+      .send({
+        parties
+      })
+    } catch (error) {
+      response
+      .status(400)
+      .send({
+        message: error.message
+      })
+    }
   }
 
   async triggerPresence({request, response, auth}){
-    var partySlug = request.body.party_slug
-    var user_id = auth.user._id
+    var partySlug = request.params.party_slug
+    var user_id = auth.user.id
     const party = await Party.where('party_slug', partySlug).first()
 
     var added, removed = ''
@@ -46,6 +173,42 @@ class PartyController {
       json[user_id] = user_id
 
       party.presences = json
+      added = true
+    }
+
+    if(await party.save()){
+      response.status(400).send({
+        add: added,
+        removed: removed
+      })
+    }else{
+      response.status(400).send(false)
+    }
+  }
+
+  async triggerFavorites({request, response, auth}){
+    var partySlug = request.params.party_slug
+    var user_id = auth.user.id
+    const party = await Party
+    .find('party_slug', partySlug)
+
+    var added, removed = ''
+
+    if (user_id in party.favorites) {
+      function deleteFromObject(keyToDelete, obj) {
+        var l = keyToDelete.length;
+        for (var key in obj)
+            if (key.substr(0, l) == keyToDelete)
+                delete obj[key];
+    }
+
+    deleteFromObject(user_id, party.favorites)
+    removed = true
+    }else{
+      let json = party.favorites
+      json[user_id] = user_id
+
+      party.favorites = json
       added = true
     }
 

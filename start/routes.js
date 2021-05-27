@@ -37,8 +37,15 @@ Route.group(() => {
 //start user
 Route.group(() => {
   Route.get('/', 'PartyController.show')
-  Route.post('/{slug}', 'PartyController.single')
-  Route.post('/{slug}/presence', 'PartyController.triggerPresence')
+  Route.get('/acontecendo-agora', 'PartyController.now')
+  Route.get('/proximas-horas', 'PartyController.nextHour')
+  Route.get('/tematicas', 'PartyController.tematics')
+
+  Route.get('/party/:party_slug', 'PartyController.single')
+
+  Route.get('/search', 'PartyController.search')
+
+  Route.post('/presence/:party_slug', 'PartyController.triggerPresence')
 }).prefix('dashboard').middleware(['auth'])
 
 Route.group(() => {
