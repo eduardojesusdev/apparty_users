@@ -50,7 +50,8 @@ Route.group(() => {
 
 Route.group(() => {
   Route.get('/', 'UserController.show')
-  Route.post('/edit', 'UserController.edit')
+  Route.post('/update', 'UserController.update')
   Route.post('/delete', 'UserController.delete')
+  Route.post('/avatar', 'FileController.avatar')
 }).prefix('dashboard/profile').middleware(['auth'])
 //end user
