@@ -45,7 +45,7 @@ Route.group(() => {
 
   Route.get('/search', 'PartyController.search')
 
-  Route.post('/presence/:party_slug', 'PartyController.triggerPresence')
+  Route.get('/presence/:party_slug', 'PartyController.triggerPresence')
 }).prefix('dashboard').middleware(['auth'])
 
 Route.group(() => {

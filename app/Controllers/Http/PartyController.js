@@ -106,7 +106,7 @@ class PartyController {
   async single({request, response}){
     try {
       const slug = request.params.party_slug
-      const single = await Party.find('party_slug', slug)
+      const single = await Party.query().where('party_slug', slug).fetch()
 
       response
       .status(200)
@@ -152,73 +152,54 @@ class PartyController {
   }
 
   async triggerPresence({request, response, auth}){
-    var partySlug = request.params.party_slug
     var user_id = auth.user.id
-    const party = await Party.where('party_slug', partySlug).first()
+    const slug = request.params.party_slug
+    const party = await Party.findByOrFail('party_slug', slug)
 
-    var added, removed = ''
+    var message = ''
 
-    if (user_id in party.presences) {
-      function deleteFromObject(keyToDelete, obj) {
-        var l = keyToDelete.length;
-        for (var key in obj)
-            if (key.substr(0, l) == keyToDelete)
-                delete obj[key];
+    party.presences = JSON.parse(party.presences)
+
+    var user_in = false
+
+
+    function removerPela(chave, valor){
+      party.presences.users = party.presences.users.filter(function(jsonObject) {
+          return jsonObject[chave] != valor;
+      });
+      return party.presences.users
     }
 
-    deleteFromObject(user_id, party.presences)
-    removed = true
+    for (var i = 0; i < party.presences.users.length; i++){
+      if (party.presences.users[i].user_id == auth.user.id){
+        party.presences.users = removerPela("user_id", user_id)
+        message = 'Presença cancelada!'
+        user_in = true
+      }
+    }
+
+    if (!user_in) {
+      let json = party.presences.users
+      json = {"user_id": user_id, "user_name": auth.user.name}
+      party.presences.users.push(json)
+      party.presences = JSON.stringify(party.presences)
+      message = 'Presença confirmada!'
     }else{
-      let json = party.presences
-      json[user_id] = user_id
-
-      party.presences = json
-      added = true
+      party.presences = JSON.stringify(party.presences)
     }
 
-    if(await party.save()){
-      response.status(400).send({
-        add: added,
-        removed: removed
+    try {
+      await party.save()
+
+      response.status(200).send({
+        message: message
       })
-    }else{
-      response.status(400).send(false)
-    }
-  }
-
-  async triggerFavorites({request, response, auth}){
-    var partySlug = request.params.party_slug
-    var user_id = auth.user.id
-    const party = await Party
-    .find('party_slug', partySlug)
-
-    var added, removed = ''
-
-    if (user_id in party.favorites) {
-      function deleteFromObject(keyToDelete, obj) {
-        var l = keyToDelete.length;
-        for (var key in obj)
-            if (key.substr(0, l) == keyToDelete)
-                delete obj[key];
-    }
-
-    deleteFromObject(user_id, party.favorites)
-    removed = true
-    }else{
-      let json = party.favorites
-      json[user_id] = user_id
-
-      party.favorites = json
-      added = true
-    }
-
-    if(await party.save()){
-      response.status(400).send({
-        add: added,
-        removed: removed
+    } catch (error) {
+      response
+      .status(400)
+      .send({
+        message: error.message
       })
-    }else{
-      response.status(400).send(false)
     }
   }
 }
