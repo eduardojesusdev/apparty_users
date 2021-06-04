@@ -154,6 +154,7 @@ class PartyController {
   async triggerPresence({request, response, auth}){
     var user_id = auth.user.id
     const slug = request.params.party_slug
+    try {
     const party = await Party.findByOrFail('party_slug', slug)
 
     var message = ''
@@ -170,25 +171,28 @@ class PartyController {
       return party.presences.users
     }
 
-    for (var i = 0; i < party.presences.users.length; i++){
-      if (party.presences.users[i].user_id == auth.user.id){
-        party.presences.users = removerPela("user_id", user_id)
-        message = 'Presença cancelada!'
-        user_in = true
+    if(typeof party.presences.users != "undefined"){
+      for (var i = 0; i < party.presences.users.length; i++){
+        if (party.presences.users[i].user_id == auth.user.id){
+          party.presences.users = removerPela("user_id", user_id)
+          message = 'Presença cancelada!'
+          user_in = true
+        }
       }
     }
 
-    if (!user_in) {
+    if (user_in) {
       let json = party.presences.users
       json = {"user_id": user_id, "user_name": auth.user.name}
       party.presences.users.push(json)
       party.presences = JSON.stringify(party.presences)
       message = 'Presença confirmada!'
     }else{
+      message = 'Presença cancelada!'
       party.presences = JSON.stringify(party.presences)
     }
 
-    try {
+
       await party.save()
 
       response.status(200).send({
