@@ -155,43 +155,36 @@ class PartyController {
     var user_id = auth.user.id
     const slug = request.params.party_slug
     try {
-    const party = await Party.findByOrFail('party_slug', slug)
+      const party = await Party.findByOrFail('party_slug', slug)
 
-    var message = ''
+      var message = ''
+      party.presences = JSON.parse(party.presences)
+      var user_in = false
 
-    party.presences = JSON.parse(party.presences)
+      function removerPela(chave, valor){
+        party.presences = party.presences.filter(function(jsonObject) {
+            return jsonObject[chave] != valor;
+        });
+        return party.presences
+      }
 
-    var user_in = false
-
-
-    function removerPela(chave, valor){
-      party.presences.users = party.presences.users.filter(function(jsonObject) {
-          return jsonObject[chave] != valor;
-      });
-      return party.presences.users
-    }
-
-    if(typeof party.presences.users != "undefined"){
-      for (var i = 0; i < party.presences.users.length; i++){
-        if (party.presences.users[i].user_id == auth.user.id){
-          party.presences.users = removerPela("user_id", user_id)
+      for (var i = 0; i < party.presences.length; i++){
+        if (party.presences[i].user_id == auth.user.id){
+          party.presences = removerPela("user_id", user_id)
           message = 'Presença cancelada!'
           user_in = true
         }
       }
-    }
 
-    if (user_in) {
-      let json = party.presences.users
-      json = {"user_id": user_id, "user_name": auth.user.name}
-      party.presences.users.push(json)
-      party.presences = JSON.stringify(party.presences)
-      message = 'Presença confirmada!'
-    }else{
-      message = 'Presença cancelada!'
-      party.presences = JSON.stringify(party.presences)
-    }
-
+      if (!user_in) {
+        let data = {"user_id": user_id, "user_name": auth.user.name}
+        party.presences.push(data)
+        party.presences = JSON.stringify(party.presences)
+        message = 'Presença confirmada!'
+      }else{
+        message = 'Presença cancelada!'
+        party.presences = JSON.stringify(party.presences)
+      }
 
       await party.save()
 
