@@ -29,21 +29,21 @@ module.exports = {
   mysql: {
     client: 'mysql',
     connection: {
-      host: Env.get('DB_HOST', db.hostname),
-      port: Env.get('DB_PORT', db.port),
-      user: Env.get('DB_USER', db.username),
-      password: Env.get('DB_PASSWORD', db.password),
-      database: Env.get('DB_DATABASE', db.pathname.substr(1))
+      host: db.hostname,
+      port: db.port,
+      user: db.username,
+      password: db.password,
+      database: db.pathname.substr(1)
     }
   },
   mysql_owners: {
     client: 'mysql',
     connection: {
-      host: Env.get('DB_HOST', db_owners.hostname),
-      port: Env.get('DB_PORT', db_owners.port),
-      user: Env.get('DB_USER', db_owners.username),
-      password: Env.get('DB_PASSWORD', db_owners.password),
-      database: Env.get('DB_DATABASE', db_owners.pathname.substr(1))
+      host: db_owners.hostname,
+      port: db_owners.port,
+      user: db_owners.username,
+      password: db_owners.password,
+      database: db_owners.pathname.substr(1)
     }
   }
 }

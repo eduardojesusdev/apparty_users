@@ -4,10 +4,12 @@ const Helpers = use('Helpers')
 const fs = use('fs')
 const bytes = use('bytes')
 const User = use('App/models/User')
+const Cloudinary = use('App/Services/Cloudinary')
+
 
 class FileController {
-  async avatar({ request, response, auth }){
-    try {
+  async avatar ({ request, response, auth }) {
+    try{
       const avatar = request.file('avatar', {
         types: ['image'],
         size: '5mb'
@@ -15,38 +17,32 @@ class FileController {
 
       const user = await User.findByOrFail('id', auth.user.id)
 
-      let newFileName = `${avatar.clientName.replace(/ /g, '_').split('.').slice(0, -1).join('.')}_${new Date().getTime()}_${Math.floor(Math.random() * 100)}.${avatar.extname}`
+      let cloudinary_response = await Cloudinary.upload(avatar)
 
-      if (user.avatar) {
-        newFileName = user.avatar.split('/')
-        newFileName = newFileName[newFileName.length - 1]
+      if (!cloudinary_response.status) {
+        response
+        .status(400)
+        .send({
+          message: 'Ocorreu um erro, tente novamente!'
+        })
       }
 
-      await avatar.move(Helpers.resourcesPath('/uploads/avatars'), {
-        name: newFileName,
-        overwrite: true
-      })
-
-      if (!avatar.moved()) {
-        return avatar.error()
-      }
-
-      console.log(user)
-      user.avatar = `/uploads/avatars/${avatar.fileName}`
+      user.avatar = cloudinary_response.url
       if (user.save()) {
         response
         .status(201)
         .send({
+          upload_info: cloudinary_response,
           message: 'Upload realizado com sucesso!'
         })
       }else{
         response
         .status(400)
         .send({
-          message: 'Ocorreu um erro, tente novamente mais tarde!'
+          message: 'Ocorreu um erro, tente novamente!'
         })
       }
-    } catch (error) {
+    }catch(error){
       response
       .status(400)
       .send({
