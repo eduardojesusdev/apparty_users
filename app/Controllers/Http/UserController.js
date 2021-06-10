@@ -5,31 +5,6 @@ const { validate } = use('Validator')
 const Env = use('Env')
 
 class UserController {
-  async favorites({response, auth}){
-    let favs = auth.user.favorites
-    var result = [];
-    for(var i in favs){
-      result.push(favs[i]);
-    }
-
-    try {
-      const parties = await Party
-      .query({party_slug: {$in: result}})
-      .paginate(page, Env.get('PER_PAGE'))
-
-      response
-      .status(200)
-      .send({
-        parties
-      })
-    } catch (error) {
-      response
-      .status(400)
-      .send({
-        message: error.message
-      })
-    }
-  }
 
   async show({response, auth}){
     try {
@@ -73,7 +48,6 @@ class UserController {
       .send({
         message: messages
       })
-      return
     }
 
     try {
