@@ -3,7 +3,7 @@
 const Helpers = use('Helpers')
 const fs = use('fs')
 const bytes = use('bytes')
-const User = use('App/models/User')
+const User = use('App/Models/User')
 const Cloudinary = use('App/Services/Cloudinary')
 
 
