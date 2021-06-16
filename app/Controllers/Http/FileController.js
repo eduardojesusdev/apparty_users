@@ -15,6 +15,8 @@ class FileController {
         size: '5mb'
       })
 
+      return avatar
+
       const user = await User.findByOrFail('id', auth.user.id)
 
       let cloudinary_response = await Cloudinary.upload(avatar)
