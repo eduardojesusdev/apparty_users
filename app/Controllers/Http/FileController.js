@@ -9,13 +9,13 @@ const Cloudinary = use('App/Services/Cloudinary')
 
 class FileController {
   async avatar ({ request, response, auth }) {
+    return request
     try{
       const avatar = request.file('avatar', {
         types: ['image'],
         size: '5mb'
       })
 
-      return avatar
 
       const user = await User.findByOrFail('id', auth.user.id)
 
